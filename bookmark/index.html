@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="user-scalable=no">
+    <title>千签</title>
+    <link rel="stylesheet" href="./css/Element.css">
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+        }
+
+        a {
+            text-decoration: none;
+            color: #000;
+        }
+
+        #background-image {
+            height: 100vh;
+            width: 100%;
+            background: url("img/background-image.png") 0px 0px no-repeat;
+            /* 背景图片自适应 */
+            background-position: center;
+            background-size: cover;
+            /* 设置高斯模糊 */
+            filter: blur(1px);
+            position: fixed;
+            z-index: -1;
+        }
+
+        #main {
+            height: 100vh;
+            width: 100%;
+            padding-top: 100px;
+        }
+
+        #search {
+            width: 45%;
+            height: 54px;
+            margin: 0px auto;
+            display: flex;
+            justify-content: center;
+
+        }
+
+        .search-input {
+            width: 88%;
+            height: 55px;
+            border: none;
+            box-shadow: 1px 1px 5px #999;
+            border-radius: 10px;
+            padding: 0px 15px;
+            outline: none;
+            font-size: 1.3em;
+            align-items: center;
+
+        }
+
+        .tag-input {
+            width: 85%;
+            height: 40px;
+            border: none;
+            box-shadow: 0px 0px 2px #999;
+            border-radius: 3px;
+            padding: 0px 15px;
+            outline: none;
+            font-size: 1em;
+            margin-bottom: 10px;
+            /* margin-left:20px; */
+        }
+
+        .search-button {
+            width: 60px;
+            height: 55px;
+            border: none;
+            background-color: white;
+            box-shadow: 1px 1px 5px #999;
+            text-align: center;
+            border-radius: 10px;
+            outline: none;
+            line-height: 55px;
+            font-size: 1.3em;
+            margin-left: 5px;
+        }
+
+        .search-button:active {
+            width: 56px;
+            height: 51px;
+            line-height: 51px;
+            margin-top: 2px;
+        }
+
+        #engine-type {
+            width: 45%;
+            height: 54px;
+            margin: 0px auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        #engine-type > div {
+            width: 65px;
+            height: 45px;
+            text-align: center;
+            line-height: 45px;
+            /* box-shadow: 1px 1px 2px #999; */
+            border-radius: 10px;
+            margin: 0px 3px;
+            background-color: rgba(255, 255, 255, 0.507);
+            cursor: pointer;
+        }
+
+        #engine-type div:active {
+            width: 60px;
+            height: 40px;
+            font-size: 0.9em;
+            line-height: 40px;
+        }
+
+        #tags {
+            width: 60%;
+            margin: 0px auto;
+        }
+
+        #scripts {
+            width: 59%;
+            margin: 20px auto;
+            border-radius: 5px;
+            box-shadow: 1px 1px 5px #999;
+            background-color: rgba(255, 255, 255, 0.507);
+            padding: 10px;
+        }
+
+        .tags {
+            margin-top: 50px;
+            background-color: rgba(255, 255, 255, 0.411);
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 1px 1px 5px #999;
+            height: 50vh;
+        }
+
+        .el-tabs__nav-scroll {
+            background-color: rgb(255, 255, 255);
+        }
+
+        .tags .tag {
+            margin-right: 10px;
+            margin-bottom: 10px;
+            height: 40px;
+            line-height: 40px;
+            background-color: rgb(255, 255, 255);
+            border: none;
+            box-shadow: 1px 1px 5px #999;
+        }
+
+        .addSubsetTagDialog {
+            border-radius: 5px;
+        }
+        #tags .el-tabs__nav-scroll {
+            background-color:rgb(255, 255, 255 ,0);
+        }
+        #scripts .el-collapse {
+            border: none;
+        }
+        #scripts .el-collapse .el-collapse-item div{
+            border: none;
+            background-color: rgb(255, 255, 255, 0);
+        }
+        #engine-type div:first-child(0){
+            background-color: rgb(255, 255, 255,0.911);
+        }
+    </style>
+    <script type="text/javascript" src="js/jquery-2.1.0.js"></script>
+    <script type="text/javascript" src="js/vue.js"></script>
+    <script src="./js/Element.js"></script>
+</head>
+
+<body>
+    <div id="background-image"></div>
+    <div id="main">
+        <div id="engine-type">
+            <div v-for="(a,i) in engines" @click="SwitchoverEngine(i)">{{a.name}}</div>
+        </div>
+        <div id="search">
+            <input type="text" class="search-input">
+            <button class="search-button" @click="Search">biu</button>
+        </div>
+        <div id="tags">
+            <template>
+                <el-tabs addable class="tags" tab-position="top" style="padding:10px 20px;" editable
+                    @edit="HandleTabsEdit">
+                    <template v-for="(a,i) in TagList">
+                        <el-tab-pane :label="a.name" :name="a.id">
+                            <el-tag v-for="(tag,ii) in a.tags" :key="tag.name" closable class="tag"
+                                @close="DelSubsetTag(i,ii)">
+                                <el-tooltip :content="tag.describe" placement="top">
+                                    <el-avatar icon="el-icon-user-solid"></el-avatar><a target="_blank"
+                                        :href="tag.like">{{tag.name}}</a>
+                                </el-tooltip>
+                            </el-tag>
+                            <span class="tag el-tag el-tag--light" style="cursor: pointer;"
+                                @click="addSubsetTagIsShow = true; tag.parentIndex=i">&nbsp;&nbsp;<i
+                                    class="el-icon-plus"></i>&nbsp;&nbsp;</span>
+                        </el-tab-pane>
+                    </template>
+                </el-tabs>
+            </template>
+        </div>
+        <div id="scripts">
+            <el-collapse v-model="activeNames">
+                <template v-for="(a,i) in ScriptList">
+                    <el-collapse-item :title="a.title" :name="a.id">
+                        <div style="cursor: pointer;">
+                            {{a.text}}
+                        </div>
+                    </el-collapse-item>
+                </template>
+
+            </el-collapse>
+        </div>
+        <el-dialog title="" :visible.sync="addSubsetTagIsShow" width="25%" center top="30vh"
+            custom-class="addSubsetTagDialog">
+            <input type="text" placeholder="What is the name ?" class="tag-input" v-model="tag.name">
+            <input type="text" placeholder="Its address is ?" class="tag-input" v-model="tag.like">
+            <input type="text" placeholder="Describe the" class="tag-input" v-model="tag.describe"
+                style="margin-bottom:0px;height:100px;">
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="addSubsetTagIsShow = false">取 消</el-button>
+                <el-button type="primary" @click="AddSubsetTag">确 定</el-button>
+            </span>
+        </el-dialog>
+    </div>
+</body>
+<script src="./js/Http.js" type="text/javascript"></script>
+<script type="text/javascript">
+
+    // 获取键盘按键事件
+    document.addEventListener("keypress", function (event) {
+        if (event.keyCode == 13) {
+            vuex.Search();
+        }
+    });
+
+    var vuex = new Vue({
+        el: '#main',
+        data: {
+            activeName: "0",
+            activeNames: [],
+            addSubsetTagIsShow: false,
+            ScriptList: [
+                {
+
+                }
+            ],
+            TagList: [
+                {
+                    id: "0",
+                    name: "经常浏览",
+                    sort: 0,
+                    creationTime: "2021-1-13 12:12:12",
+                    tags: [
+                        { name: '啵啵啵宝宝', like: "https://baidu.com", describe: "哈哈哈哈哈哈哈哈哈哈哈" }
+                    ]
+                },
+                {
+                    id: "1",
+                    name: "实用工具",
+                    sort: 0,
+                    creationTime: "2021-1-13 12:12:12",
+                    tags: [
+                        { name: '腾讯PC软件商店', like: "https://pc.qq.com/", describe: "便利的常用软件下载网站" },
+                        { name: '哔哩哔哩', like: "https://www.bilibili.com/", describe: "著名的学习网站" },
+                        { name: '果核剥壳', like: "https://www.ghpym.com/", describe: "免费软件大全" },
+                        { name: '蓝奏云', like: "https://www.lanzou.com/", describe: "免费的文件存储网站" },
+                        { name: '字体之家', like: "https://www.zitijia.com/", describe: "字体下载网站" },
+                        { name: '在线PS', like: "https://www.uupoop.com/", describe: "便捷的网页PS" },
+                        { name: '在线消除背景', like: "https://www.remove.bg/", describe: "可以一键扣除背景" },
+                        { name: 'wallhaven', like: "https://wallhaven.cc/", describe: "质量很高的壁纸网站" },
+                        { name: '鸠摩搜书', like: "https://www.jiumodiary.com/", describe: "电子书搜索网站的优秀代表" },
+                        { name: '简乐', like: "http://record.mowangtao.com/Search.html", describe: "一个支持多家音乐平台的音乐网站" },
+                        { name: 'Magedn', like: "https://www.magedn.com/", describe: "支持4k下载的视频资源网站" },
+                        { name: '游戏仓库', like: "https://www.cmdw.vip/", describe: "全球超大的游戏下载平台" }
+                    ]
+                },
+                {
+                    id: "2",
+                    name: "IT论坛",
+                    sort: 0,
+                    creationTime: "2021-1-13 12:12:12",
+                    tags: [
+                        { name: 'CSDN', like: "https://www.csdn.net", describe: "知名程序员社区" },
+                        { name: '掘金', like: "https://juejin.cn/", describe: "一个帮助开发者成长的社区" },
+                        { name: 'v2ex', like: "https://www.v2ex.com", describe: "程序员集散地" },
+                        { name: 'github', like: "https://www.github.com", describe: "著名同性交友网站，轮子提供商，实现代码共产的天堂" },
+                        { name: 'stackoverflow', like: "https://www.stackoverflow.com", describe: "轮子提供商" }
+                    ]
+                },
+                {
+                    id: "3",
+                    name: "各种文档",
+                    sort: 0,
+                    creationTime: "2021-1-13 12:12:12",
+                    tags: [
+                        { name: 'Element', like: "https://element.eleme.cn/#/zh-CN", describe: "网站快速成型工具" },
+                        { name: 'Uniapp', like: "https://uniapp.dcloud.io/", describe: "多平台前端快速开发工具" },
+                        { name: '菜鸟教程', like: "https://www.runoob.com/", describe: "一个编程学习网网站" },
+                        { name: 'Vue', like: "https://cn.vuejs.org/", describe: "渐进式JavaScript框架" },
+                        { name: 'Bootstrap', like: "https://www.bootcss.com/", describe: "简洁、直观、强悍的前端开发框架" },
+                    ]
+                },
+                {
+                    id: "4",
+                    name: "工作",
+                    sort: 0,
+                    creationTime: "2021-1-13 12:12:12",
+                    tags: [
+                        { name: '云桌面', like: "https://172.16.104.18/pages/homepage.do", describe: "华为云桌面" },
+                        { name: '共享文件', like: "file://hailang/共享资料", describe: "共享文件" },
+                    ]
+                },
+            ],
+            tag: { name: '', like: "", describe: "", parentIndex: 0 },
+            engines: [
+                {
+                    name: "百度",
+                    url: "https://www.baidu.com/s?ie=utf-8&f=8&rsv_bp=1&tn=baidu&wd="
+                },
+                {
+                    name: "搜狗",
+                    url: "https://www.sogou.com/web?ie=utf-8&query="
+                },
+                {
+                    name: "必应",
+                    url: "https://www.bing.com/search?q="
+                },
+                {
+                    name: "谷歌",
+                    url: "https://www.google.com/search?q="
+                },
+            ],
+            engine: {
+                name: "百度",
+                url: "https://www.baidu.com/s?ie=utf-8&f=8&rsv_bp=1&tn=baidu&wd="
+            }
+        },
+        methods: {
+            AddSubsetTag() {
+                let _this = this;
+                if (_this.tag.name === "" || _this.tag.like === "") {
+                    _this.$message({
+                        message: '请把名称和网址输入完整！！',
+                        type: 'warning'
+                    });
+                    return;
+                }
+                let po = {
+                    name: _this.tag.name, like: _this.tag.like, describe: _this.tag.describe
+                }
+                _this.TagList[_this.tag.parentIndex].tags.push(po);
+                _this.addSubsetTagIsShow = false;
+            },
+            //删除子集标签
+            DelSubsetTag(index1, index2) {
+                this.TagList[index1].tags.splice(index2, 1);
+            },
+            //切换引擎
+            SwitchoverEngine(index) {
+                this.engine = this.engines[index];
+                $("#engine-type").find("div").eq(index).css({ "background-color": "rgba(255, 255, 255, 0.911)" });
+                $("#engine-type").find("div").eq(index).siblings().css({ "background-color": "rgba(255, 255, 255, 0.411)" });
+            },
+            //搜索
+            Search() {
+                let value = $(".search-input").val();
+                if (value === "") return;
+                // window.location.href = this.engine.url +value;
+                window.open(this.engine.url + value, "_blank");
+            },
+            HandleTabsEdit(targetName, action) {
+                if (action === 'add') {
+                    let newTabName = ++this.tabIndex + '';
+                    this.editableTabs.push({
+                        title: 'New Tab',
+                        name: newTabName,
+                        content: 'New Tab content'
+                    });
+                    this.editableTabsValue = newTabName;
+                }
+                if (action === 'remove') {
+                    let tabs = this.editableTabs;
+                    let activeName = this.editableTabsValue;
+                    if (activeName === targetName) {
+                        tabs.forEach((tab, index) => {
+                            if (tab.name === targetName) {
+                                let nextTab = tabs[index + 1] || tabs[index - 1];
+                                if (nextTab) {
+                                    activeName = nextTab.name;
+                                }
+                            }
+                        });
+                    }
+
+                    this.editableTabsValue = activeName;
+                    this.editableTabs = tabs.filter(tab => tab.name !== targetName);
+                }
+            }
+        },
+        mounted() {
+
+        },
+    });
+
+
+</script>
+
+</html>
